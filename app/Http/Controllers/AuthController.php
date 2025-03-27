@@ -8,34 +8,43 @@ use Illuminate\Support\Facades\Log;
 
 class AuthController extends Controller
 {
-    // Login function
     public function login(Request $request)
     {
-        $credentials = $request->only('email', 'password');
-        Log::info('Login attempt', ['credentials' => $credentials]);
+        try {
+            // Validate the request data    
+            $credentials = $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+            ]);
 
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+            // Attempt authentication
+            if (Auth::attempt($credentials)) {
+                $user = Auth::user();
+                $token = $user->createToken('auth_token')->plainTextToken;
+                Log::info('User authenticated successfully', ['user' => $user->id]);
 
-        if (Auth::attempt($credentials)) {
-            $user = Auth::user();
-            $token = $user->createToken('auth_token')->plainTextToken;
-            Log::info('User authenticated', ['user' => $user]);
+                return response()->json([
+                    'message' => 'Login successful',
+                    'token' => $token,
+                ], 200);
+            }
 
-            return response()->json(['message' => 'Login successful', 'token' => $token], 200);
+            // Log invalid credentials
+            Log::warning('Failed login attempt', [
+                'email' => $credentials['email'],
+                'reason' => 'Invalid credentials',
+            ]);
+
+            return response()->json(['message' => 'Invalid credentials'], 401);
+
+        } catch (\Exception $e) {
+            // Log unexpected errors
+            Log::error('Error during login', [
+                'exception_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['message' => 'An error occurred during login'], 500);
         }
-
-        Log::warning('Invalid login attempt', ['credentials' => $credentials]);
-        return response()->json(['message' => 'Invalid credentials'], 401);
-}
-    // Logout function
-    public function logout(Request $request)
-    {
-        $user = Auth::guard('sanctum')->user();
-        $user->tokens()->delete();
-        return response()->json(['message' => 'Logged out'], 200);
     }
 }
-
