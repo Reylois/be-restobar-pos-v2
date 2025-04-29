@@ -29,10 +29,20 @@ class ProductController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255|unique:products',
+                'name' => 'required|string|max:255',
                 'stock' => 'required|integer|min:1',
                 'category' => 'required|string',
             ]);
+
+            $existingIngredient = Product::where('name', $validated['name'])
+                                         ->where('isActive', true)
+                                         ->first();
+
+            if($existingIngredient) {
+                return response()->json([
+                    'message' => 'Category already exists'
+                ], 409);
+            }
 
             Product::create([
                 'name' => $validated['name'],
