@@ -53,4 +53,22 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function deleteIngredient(Product $product) {
+        try {
+            $product->update(['isActive' => 0]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ingredient deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting ingredient: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting ingredient',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
 }
