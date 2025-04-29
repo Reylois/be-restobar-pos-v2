@@ -25,6 +25,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin routes
     Route::middleware('ability:admin')->group(function () {
-        Route::post('/product', [ProductController::class, 'store']);
+        Route::post('/ingredient', [ProductController::class, 'addIngredient']);
+        Route::get('/ingredients', [ProductController::class, 'showIngredients']);
     });
 });
