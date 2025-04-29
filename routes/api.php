@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\ProductController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,6 +25,6 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin routes
     Route::middleware('ability:admin')->group(function () {
-        // Admin endpoints here
+        Route::post('/product', [ProductController::class, 'store']);
     });
 });
