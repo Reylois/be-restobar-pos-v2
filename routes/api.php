@@ -25,8 +25,25 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin routes
     Route::middleware('ability:admin')->group(function () {
+        
+        // Ingredients Routes
         Route::post('/ingredient', [ProductController::class, 'addIngredient']);
         Route::get('/ingredients', [ProductController::class, 'showIngredients']);
         Route::patch('/ingredient/delete/{product}', [ProductController::class, 'deleteIngredient']);
+
+        // Beverages Routes
+        Route::post('/beverage', [ProductController::class, 'addBeverage']);
+        Route::get('/beverages', [ProductController::class, 'showBeverages']);
+        Route::patch('/beverage/delete/{product}', [ProductController::class, 'deleteBeverage']);
+
+        // Desserts Routes
+        Route::post('/dessert', [ProductController::class, 'addDessert']);
+        Route::get('/desserts', [ProductController::class, 'showDesserts']);
+        Route::patch('/dessert/delete/{product}', [ProductController::class, 'deleteDessert']);
+
+        // Others Routes
+        Route::post('/other', [ProductController::class, 'addOther']);
+        Route::get('/others', [ProductController::class, 'showOthers']);
+        Route::patch('/other/delete/{product}', [ProductController::class, 'deleteOther']);
     });
 });

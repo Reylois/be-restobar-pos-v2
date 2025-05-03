@@ -7,19 +7,21 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
+    /********************** Helper functions for Ingredients *************************************************************/
     public function showIngredients() {
         try {
-            $products = Product::where('isActive', 1)->where('category', 'ingredients')->get();
+            $products = Product::where('isActive', 1)
+                               ->where('category', 'ingredients')->get();
 
             return response()->json([
                 'status' => 'success',
                 'data' => $products,
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error fetching products: ' . $e->getMessage());
+            \Log::error('Error fetching ingredients: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error fetching products',
+                'message' => 'Error fetching ingredients',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -46,7 +48,7 @@ class ProductController extends Controller
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Product added successfully',
+                    'message' => 'Ingredient added successfully',
                     'product' => $product
                 ]);
             }
@@ -54,7 +56,7 @@ class ProductController extends Controller
             if ($product && $product->isActive) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Product with the same name already exists.'
+                    'message' => 'Ingredient with the same name already exists.'
                 ], 409);
             }
 
@@ -66,14 +68,14 @@ class ProductController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'New product created',
+                'message' => 'New Ingredient created',
                 'product' => $newProduct
             ]);
         } catch (\Exception $e) {
-            \Log::error('Error creating products: ' . $e->getMessage());
+            \Log::error('Error adding ingredient: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error creating products',
+                'message' => 'Error adding ingredient',
                 'error' => $e->getMessage()
             ], 500);
         }
@@ -92,6 +94,285 @@ class ProductController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error deleting ingredient',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+
+    /********************** Helper functions for Beverages *************************************************************/
+
+    public function showBeverages() {
+        try {
+            $products = Product::where('isActive', 1)
+                               ->where('category', 'beverages')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $products,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching beverages: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching beverages',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addBeverage(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+                'category' => 'required|string',
+            ]);
+
+            $product = Product::where('name', $validated['name'])->first();
+
+            if ($product && !$product->isActive) {
+                // Re-enable and update the existing product
+                $product->update([
+                    'stock' => $validated['stock'],
+                    'category' => $validated['category'],
+                    'isActive' => true
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Beverage added successfully',
+                    'product' => $product
+                ]);
+            }
+
+            if ($product && $product->isActive) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Beverage with the same name already exists.'
+                ], 409);
+            }
+
+            $newProduct = Product::create([
+                'name' => $validated['name'],
+                'stock' => $validated['stock'],
+                'category' => $validated['category']
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'New Beverage added',
+                'product' => $newProduct
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding beverage: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error adding beverage',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteBeverage(Product $product) {
+        try {
+            $product->update(['isActive' => 0]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Beverage deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting beverage: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting beverage',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /********************** Helper functions for Desserts *************************************************************/
+    public function showDesserts() {
+        try {
+            $products = Product::where('isActive', 1)
+                               ->where('category', 'desserts')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $products,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching desserts: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching desserts',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addDessert(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+                'category' => 'required|string',
+            ]);
+
+            $product = Product::where('name', $validated['name'])->first();
+
+            if ($product && !$product->isActive) {
+                // Re-enable and update the existing product
+                $product->update([
+                    'stock' => $validated['stock'],
+                    'category' => $validated['category'],
+                    'isActive' => true
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Dessert added successfully',
+                    'product' => $product
+                ]);
+            }
+
+            if ($product && $product->isActive) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Dessert with the same name already exists.'
+                ], 409);
+            }
+
+            $newProduct = Product::create([
+                'name' => $validated['name'],
+                'stock' => $validated['stock'],
+                'category' => $validated['category']
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'New Dessert added',
+                'product' => $newProduct
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding dessert: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error adding dessert',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteDessert(Product $product) {
+        try {
+            $product->update(['isActive' => 0]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dessert deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting dessert: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting dessert',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /********************** Helper functions for Others *************************************************************/
+
+    public function showOthers() {
+        try {
+            $products = Product::where('isActive', 1)
+                               ->where('category', 'others')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $products,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching items: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching items',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addOther(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+                'category' => 'required|string',
+            ]);
+
+            $product = Product::where('name', $validated['name'])->first();
+
+            if ($product && !$product->isActive) {
+                // Re-enable and update the existing product
+                $product->update([
+                    'stock' => $validated['stock'],
+                    'category' => $validated['category'],
+                    'isActive' => true
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Item added successfully',
+                    'product' => $product
+                ]);
+            }
+
+            if ($product && $product->isActive) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Item with the same name already exists.'
+                ], 409);
+            }
+
+            $newProduct = Product::create([
+                'name' => $validated['name'],
+                'stock' => $validated['stock'],
+                'category' => $validated['category']
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'New item added',
+                'product' => $newProduct
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding item: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error adding item',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteOther(Product $product) {
+        try {
+            $product->update(['isActive' => 0]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Item deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting item: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting item',
                 'error' => $e->getMessage()
             ]);
         }
