@@ -28,16 +28,17 @@ class AuthController extends Controller
 
         // Create token with abilities based on role
         if ($user->role === 'admin') {
-            $token = $user->createToken($request->device_name, ['admin', 'staff'])->plainTextToken;
+            $token = $user->createToken($request->device_name, ['admin', 'cashier'])->plainTextToken;
         } else {
-            $token = $user->createToken($request->device_name, ['staff'])->plainTextToken;
+            $token = $user->createToken($request->device_name, ['cashier'])->plainTextToken;
         }
 
         return response()->json([
             'token' => $token,
             'user' => [
                 'id' => $user->id,
-                'name' => $user->name,
+                'fname' => $user->fname,
+                'lname' => $user->lname,
                 'username' => $user->username,
                 'role' => $user->role,
             ]
@@ -47,7 +48,8 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
+            'fname' => 'required|string|max:255',
+            'lname' => 'required|string|max:255',
             'username' => 'required|string|max:255|unique:users',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'sometimes|string|in:admin,staff',
@@ -91,7 +93,8 @@ class AuthController extends Controller
         return response()->json([
             'user' => [
                 'id' => $request->user()->id,
-                'name' => $request->user()->name,
+                'fname' => $request->user()->fname,
+                'lname' => $request->user()->lname,
                 'username' => $request->user()->username,
                 'role' => $request->user()->role,
             ]
