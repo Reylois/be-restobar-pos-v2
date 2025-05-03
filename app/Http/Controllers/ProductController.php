@@ -34,25 +34,40 @@ class ProductController extends Controller
                 'category' => 'required|string',
             ]);
 
-            $existingIngredient = Product::where('name', $validated['name'])
-                                         ->where('isActive', true)
-                                         ->first();
+            $product = Product::where('name', $validated['name'])->first();
 
-            if($existingIngredient) {
+            if ($product && !$product->isActive) {
+                // Re-enable and update the existing product
+                $product->update([
+                    'stock' => $validated['stock'],
+                    'category' => $validated['category'],
+                    'isActive' => true
+                ]);
+
                 return response()->json([
-                    'message' => 'Category already exists'
+                    'status' => 'success',
+                    'message' => 'Product added successfully',
+                    'product' => $product
+                ]);
+            }
+
+            if ($product && $product->isActive) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Product with the same name already exists.'
                 ], 409);
             }
 
-            Product::create([
+            $newProduct = Product::create([
                 'name' => $validated['name'],
                 'stock' => $validated['stock'],
-                'category' => $validated['category'],
-                'isActive' => true
+                'category' => $validated['category']
             ]);
 
             return response()->json([
-                'message' => 'Product added successfully'
+                'status' => 'success',
+                'message' => 'New product created',
+                'product' => $newProduct
             ]);
         } catch (\Exception $e) {
             \Log::error('Error creating products: ' . $e->getMessage());
