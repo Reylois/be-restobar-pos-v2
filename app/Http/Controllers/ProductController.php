@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
@@ -96,6 +97,35 @@ class ProductController extends Controller
                 'message' => 'Error deleting ingredient',
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function updateIngredient(Request $request, $id) 
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+            ]);
+
+            $product = Product::findOrFail($id);
+            $product->update($validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ingredient updated successfully',
+                'product' => $product
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating ingredients: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating ingredient',
+                'error' => $e->getMessage() 
+            ], 500);
         }
     }
 
@@ -193,6 +223,35 @@ class ProductController extends Controller
         }
     }
 
+    public function updateBeverage(Request $request, $id) 
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+            ]);
+
+            $product = Product::findOrFail($id);
+            $product->update($validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Beverage updated successfully',
+                'product' => $product
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating beverage: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating beverage',
+                'error' => $e->getMessage() 
+            ], 500);
+        }
+    }
+
     /********************** Helper functions for Desserts *************************************************************/
     public function showDesserts() {
         try {
@@ -282,6 +341,35 @@ class ProductController extends Controller
                 'message' => 'Error deleting dessert',
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function updateDessert(Request $request, $id) 
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+            ]);
+
+            $product = Product::findOrFail($id);
+            $product->update($validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dessert updated successfully',
+                'product' => $product
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating dessert: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating dessert',
+                'error' => $e->getMessage() 
+            ], 500);
         }
     }
 
@@ -375,6 +463,35 @@ class ProductController extends Controller
                 'message' => 'Error deleting item',
                 'error' => $e->getMessage()
             ]);
+        }
+    }
+
+    public function updateOther(Request $request, $id) 
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'stock' => 'required|integer|min:1',
+            ]);
+
+            $product = Product::findOrFail($id);
+            $product->update($validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Item updated successfully',
+                'product' => $product
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating item: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating item',
+                'error' => $e->getMessage() 
+            ], 500);
         }
     }
 }
