@@ -4,6 +4,7 @@ use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\ProductListController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -49,5 +50,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/others', [ProductController::class, 'showOthers']);
         Route::patch('/other/delete/{product}', [ProductController::class, 'deleteOther']);
         Route::put('/other/update/{product}', [ProductController::class,'updateOther']);
+
+        // MainDish Routes
+        Route::post('/mainDish', [ProductListController::class, 'addMainDish']);
+        Route::get('/mainDishes', [ProductListController::class, 'showMainDish']);
+        Route::patch('/mainDish/delete/{productList}', [ProductListController::class, 'deleteMainDish']);
+        Route::put('/mainDish/update/{productList}', [ProductListController::class,'updateMainDish']);
     });
 });

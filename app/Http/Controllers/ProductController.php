@@ -450,6 +450,7 @@ class ProductController extends Controller
 
     public function deleteOther(Product $product) {
         try {
+            \Log::info($product);
             $product->update(['isActive' => 0]);
 
             return response()->json([
@@ -463,35 +464,6 @@ class ProductController extends Controller
                 'message' => 'Error deleting item',
                 'error' => $e->getMessage()
             ]);
-        }
-    }
-
-    public function updateOther(Request $request, $id) 
-    {
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'stock' => 'required|integer|min:1',
-            ]);
-
-            $product = Product::findOrFail($id);
-            $product->update($validated);
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Item updated successfully',
-                'product' => $product
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error updating item: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
-
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error updating item',
-                'error' => $e->getMessage() 
-            ], 500);
         }
     }
 }
