@@ -68,5 +68,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/dessertList', [ProductListController::class, 'showDessertList']);
         Route::patch('/dessertList/delete/{productList}', [ProductListController::class, 'deleteDessertList']);
         Route::put('/dessertList/update/{productList}', [ProductListController::class,'updateDessertList']);
+
+        // Item List Routes
+        Route::post('/itemList/add', [ProductListController::class, 'addItemList']);
+        Route::get('/itemList', [ProductListController::class, 'showItemList']);
+        Route::patch('/itemList/delete/{productList}', [ProductListController::class, 'deleteItemList']);
+        Route::put('/itemList/update/{productList}', [ProductListController::class,'updateItemList']);
     });
 });
