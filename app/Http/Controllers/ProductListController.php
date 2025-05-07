@@ -257,5 +257,131 @@ class ProductListController extends Controller
                 'error' => $e->getMessage() 
             ], 500);
         }
-    }   
+    } 
+    
+      /********************** Helper functions for Dessert List *************************************************************/
+      public function showDessertList() {
+        try {
+            $productList = ProductList::where('isActive', 1)
+                               ->where('category', 'desserts')->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $productList,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching desserts: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching desserts',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function addDessertList(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'category' => 'required|string',
+                'imagePath' => 'nullable|string|max:255',
+                'price' => 'required|numeric|decimal:0,2|min:1',
+            ]);
+
+            $productList = ProductList::where('name', $validated['name'])->first();
+
+            if ($productList && !$productList->isActive) {
+                // Re-enable and update the existing product
+                $productList->update([
+                    'category' => $validated['category'],
+                    'imagePath' => $validated['imagePath'],
+                    'price' => $validated['price'],
+                    'isActive' => true
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Desserts added successfully',
+                    'product' => $productList
+                ]);
+            }
+
+            if ($productList && $productList->isActive) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Desserts with the same name already exists.'
+                ], 409);
+            }
+
+            $newproductList = ProductList::create([
+                'name' => $validated['name'],
+                'imagePath' => $validated['imagePath'],
+                'category' => $validated['category'],
+                'price' => $validated['price'],
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dessert added',
+                'product' => $newproductList
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding dessert: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error adding dessert',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deleteDessertList(ProductList $productList) {
+        try {
+            \Log::info($productList);
+            $productList->update(['isActive' => 0]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dessert deleted successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting dessert: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting dessert',
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    public function updateDessertList(Request $request, $id) 
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'price' => 'required|numeric|decimal:0,2|min:1',
+                'imagePath' => 'nullable|string|max:255',
+            ]);
+
+            $productList = ProductList::findOrFail($id);
+            $productList->update($validated);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Dessert updated successfully',
+                'product' => $productList
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating dessert: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating dessert',
+                'error' => $e->getMessage() 
+            ], 500);
+        }
+    } 
 }
