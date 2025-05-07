@@ -56,5 +56,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/mainDishes', [ProductListController::class, 'showMainDish']);
         Route::patch('/mainDish/delete/{productList}', [ProductListController::class, 'deleteMainDish']);
         Route::put('/mainDish/update/{productList}', [ProductListController::class,'updateMainDish']);
+
+        // Beverage List Routes
+        Route::post('/beverageList/add', [ProductListController::class, 'addBeverageList']);
+        Route::get('/beverageList', [ProductListController::class, 'showBeverageList']);
+        Route::patch('/beverageList/delete/{productList}', [ProductListController::class, 'deleteBeverageList']);
+        Route::put('/beverageList/update/{productList}', [ProductListController::class,'updateBeverageList']);
     });
 });
