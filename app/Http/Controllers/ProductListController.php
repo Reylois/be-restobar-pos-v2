@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\ProductList;
+use Illuminate\Support\Facades\Log;
 
 class ProductListController extends Controller
 {
@@ -109,18 +110,41 @@ class ProductListController extends Controller
         }
     }
 
-    public function updateMainDish(Request $request, $id) 
+    public function updateMainDish(Request $request, $id)
     {
+        Log::info('Update request received', [
+            'id' => $id,
+            'name' => $request->input('name'),
+            'price' => $request->input('price'),
+            'image' => $request->hasFile('image') ? $request->file('image')->getClientOriginalName() : null,
+        ]);
+
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|decimal:0,2|min:1',
-                'imagePath' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', 
             ]);
-
+    
             $productList = ProductList::findOrFail($id);
-            $productList->update($validated);
-
+    
+            if ($request->hasFile('image')) {
+                if ($productList->imagePath && file_exists(public_path($productList->imagePath))) {
+                    unlink(public_path($productList->imagePath));
+                }
+    
+                $image = $request->file('image');
+                $imageName = time() . '_' . $image->getClientOriginalName();
+                $imagePath = 'images/' . $imageName;
+                $image->move(public_path('images'), $imageName);
+    
+                $productList->imagePath = $imagePath;
+            }
+    
+            $productList->name = $validated['name'];
+            $productList->price = $validated['price'];
+            $productList->save();
+    
             return response()->json([
                 'status' => 'success',
                 'message' => 'Main dish updated successfully',
@@ -130,14 +154,15 @@ class ProductListController extends Controller
             \Log::error('Error updating main dish: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-
+    
             return response()->json([
                 'status' => 'error',
                 'message' => 'Error updating main dish',
-                'error' => $e->getMessage() 
+                'error' => $e->getMessage()
             ], 500);
         }
-    }   
+    }
+      
 
     /********************** Helper functions for Beverage List *************************************************************/
     public function showBeverageList() {
