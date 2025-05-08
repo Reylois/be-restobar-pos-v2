@@ -297,9 +297,15 @@ class ProductListController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'category' => 'required|string',
-                'imagePath' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
                 'price' => 'required|numeric|decimal:0,2|min:1',
             ]);
+
+            $imagePath = null;
+
+            if ($request->hasFile('image')) {
+                $imagePath = $request->file('image')->store('menu-images', 'public');
+            }
 
             $productList = ProductList::where('name', $validated['name'])->first();
 
@@ -307,14 +313,14 @@ class ProductListController extends Controller
                 // Re-enable and update the existing product
                 $productList->update([
                     'category' => $validated['category'],
-                    'imagePath' => $validated['imagePath'],
+                    'imagePath' => $imagePath,
                     'price' => $validated['price'],
                     'isActive' => true
                 ]);
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => 'Desserts added successfully',
+                    'message' => 'Dessert added successfully',
                     'product' => $productList
                 ]);
             }
@@ -322,20 +328,20 @@ class ProductListController extends Controller
             if ($productList && $productList->isActive) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'Desserts with the same name already exists.'
+                    'message' => 'Dessert with the same name already exists.'
                 ], 409);
             }
 
             $newproductList = ProductList::create([
                 'name' => $validated['name'],
-                'imagePath' => $validated['imagePath'],
+                'imagePath' => $imagePath,
                 'category' => $validated['category'],
                 'price' => $validated['price'],
             ]);
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Dessert added',
+                'message' => 'Dessert added successfully',
                 'product' => $newproductList
             ]);
         } catch (\Exception $e) {
