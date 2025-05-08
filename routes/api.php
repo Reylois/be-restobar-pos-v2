@@ -19,6 +19,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/mainDishes', [ProductListController::class, 'showMainDish']);
+    Route::get('/products/{category}', [ProductListController::class, 'showByCategory']);
     
     // Staff routes
     Route::middleware('ability:staff')->group(function () {

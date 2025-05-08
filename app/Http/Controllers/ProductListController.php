@@ -516,4 +516,36 @@ class ProductListController extends Controller
             ], 500);
         }
     } 
+
+    /******************************************  Fetch Products by Category   *********************************************** */
+    // In your controller (e.g., ProductController.php)
+    public function showByCategory($category)
+    {
+        try {
+            $validCategories = ['mainDish', 'beverages', 'desserts', 'others'];
+            if (!in_array($category, $validCategories)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Invalid category'
+                ], 400);
+            }
+
+            $productList = ProductList::where('isActive', 1)
+                                    ->where('category', $category)
+                                    ->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $productList,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error("Error fetching $category: " . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error fetching products',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
 }
