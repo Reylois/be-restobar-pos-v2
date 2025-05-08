@@ -18,6 +18,7 @@ Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/mainDishes', [ProductListController::class, 'showMainDish']);
     
     // Staff routes
     Route::middleware('ability:staff')->group(function () {
@@ -53,7 +54,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // MainDish Routes
         Route::post('/mainDish', [ProductListController::class, 'addMainDish']);
-        Route::get('/mainDishes', [ProductListController::class, 'showMainDish']);
         Route::patch('/mainDish/delete/{productList}', [ProductListController::class, 'deleteMainDish']);
         Route::put('/mainDish/update/{productList}', [ProductListController::class,'updateMainDish']);
 
