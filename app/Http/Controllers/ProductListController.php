@@ -270,32 +270,57 @@ class ProductListController extends Controller
         }
     }
 
-    public function updateBeverageList(Request $request, $id) 
+    public function updateBeverageList(Request $request, $id)
     {
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|decimal:0,2|min:1',
-                'imagePath' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
-
+    
             $productList = ProductList::findOrFail($id);
-            $productList->update($validated);
-
+            
+            // Handle image update
+            if ($request->hasFile('image')) {
+                // Delete old image if it exists and is not a default image
+                if ($productList->imagePath && Storage::disk('public')->exists($productList->imagePath)) {
+                    Storage::disk('public')->delete($productList->imagePath);
+                }
+                
+                // Store the new image in the same location as addMainDish
+                $imagePath = $request->file('image')->store('menu-images', 'public');
+                $productList->imagePath = $imagePath;
+            }   
+    
+            // Update other fields
+            $productList->name = $validated['name'];
+            $productList->price = $validated['price'];
+            $productList->save();
+    
             return response()->json([
                 'status' => 'success',
                 'message' => 'Beverage updated successfully',
                 'product' => $productList
             ]);
+        } catch (ValidationException $e) {
+            \Log::error('Validation error updating beverage: ' . $e->getMessage(), [
+                'errors' => $e->errors()
+            ]);
+    
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             \Log::error('Error updating beverage: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-
+    
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error updating beverage',
-                'error' => $e->getMessage() 
+                'message' => 'Error updating beverage: ' . $e->getMessage()
             ], 500);
         }
     } 
@@ -402,35 +427,60 @@ class ProductListController extends Controller
         }
     }
 
-    public function updateDessertList(Request $request, $id) 
+    public function updateDessertList(Request $request, $id)
     {
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|decimal:0,2|min:1',
-                'imagePath' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
-
+    
             $productList = ProductList::findOrFail($id);
-            $productList->update($validated);
-
+            
+            // Handle image update
+            if ($request->hasFile('image')) {
+                // Delete old image if it exists and is not a default image
+                if ($productList->imagePath && Storage::disk('public')->exists($productList->imagePath)) {
+                    Storage::disk('public')->delete($productList->imagePath);
+                }
+                
+                // Store the new image in the same location as addMainDish
+                $imagePath = $request->file('image')->store('menu-images', 'public');
+                $productList->imagePath = $imagePath;
+            }   
+    
+            // Update other fields
+            $productList->name = $validated['name'];
+            $productList->price = $validated['price'];
+            $productList->save();
+    
             return response()->json([
                 'status' => 'success',
                 'message' => 'Dessert updated successfully',
                 'product' => $productList
             ]);
+        } catch (ValidationException $e) {
+            \Log::error('Validation error updating dessert: ' . $e->getMessage(), [
+                'errors' => $e->errors()
+            ]);
+    
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             \Log::error('Error updating dessert: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-
+    
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error updating dessert',
-                'error' => $e->getMessage() 
+                'message' => 'Error updating dessert: ' . $e->getMessage()
             ], 500);
         }
-    } 
+    }
 
         /********************** Helper functions for Item List *************************************************************/
         public function showItemList() {
@@ -534,35 +584,60 @@ class ProductListController extends Controller
         }
     }
 
-    public function updateItemList(Request $request, $id) 
+    public function updateItemList(Request $request, $id)
     {
         try {
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'price' => 'required|numeric|decimal:0,2|min:1',
-                'imagePath' => 'nullable|string|max:255',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
-
+    
             $productList = ProductList::findOrFail($id);
-            $productList->update($validated);
-
+            
+            // Handle image update
+            if ($request->hasFile('image')) {
+                // Delete old image if it exists and is not a default image
+                if ($productList->imagePath && Storage::disk('public')->exists($productList->imagePath)) {
+                    Storage::disk('public')->delete($productList->imagePath);
+                }
+                
+                // Store the new image in the same location as addMainDish
+                $imagePath = $request->file('image')->store('menu-images', 'public');
+                $productList->imagePath = $imagePath;
+            }   
+    
+            // Update other fields
+            $productList->name = $validated['name'];
+            $productList->price = $validated['price'];
+            $productList->save();
+    
             return response()->json([
                 'status' => 'success',
                 'message' => 'Item updated successfully',
                 'product' => $productList
             ]);
+        } catch (ValidationException $e) {
+            \Log::error('Validation error updating Item: ' . $e->getMessage(), [
+                'errors' => $e->errors()
+            ]);
+    
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
         } catch (\Exception $e) {
             \Log::error('Error updating item: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
-
+    
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error updating item',
-                'error' => $e->getMessage() 
+                'message' => 'Error updating dish: ' . $e->getMessage()
             ], 500);
         }
-    } 
+    }
 
     /******************************************  Fetch Products by Category   *********************************************** */
     // In your controller (e.g., ProductController.php)
