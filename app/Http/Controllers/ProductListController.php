@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ProductList;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Storage;
 
 class ProductListController extends Controller
 {
@@ -91,6 +93,61 @@ class ProductListController extends Controller
         }
     }
 
+    public function updateMainDish(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'price' => 'required|numeric|decimal:0,2|min:1',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            ]);
+    
+            $productList = ProductList::findOrFail($id);
+            
+            // Handle image update
+            if ($request->hasFile('image')) {
+                // Delete old image if it exists and is not a default image
+                if ($productList->imagePath && Storage::disk('public')->exists($productList->imagePath)) {
+                    Storage::disk('public')->delete($productList->imagePath);
+                }
+                
+                // Store the new image in the same location as addMainDish
+                $imagePath = $request->file('image')->store('menu-images', 'public');
+                $productList->imagePath = $imagePath;
+            }   
+    
+            // Update other fields
+            $productList->name = $validated['name'];
+            $productList->price = $validated['price'];
+            $productList->save();
+    
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Main dish updated successfully',
+                'product' => $productList
+            ]);
+        } catch (ValidationException $e) {
+            \Log::error('Validation error updating main dish: ' . $e->getMessage(), [
+                'errors' => $e->errors()
+            ]);
+    
+            return response()->json([
+                'status' => 'error',
+                'message' => $e->getMessage(),
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Error updating main dish: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+    
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating main dish: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
     public function deleteMainDish(ProductList $productList) {
         try {
             \Log::info($productList);
@@ -107,59 +164,6 @@ class ProductListController extends Controller
                 'message' => 'Error deleting main dish',
                 'error' => $e->getMessage()
             ]);
-        }
-    }
-
-    public function updateMainDish(Request $request, $id)
-    {
-        Log::info('Update request received', [
-            'id' => $id,
-            'name' => $request->input('name'),
-            'price' => $request->input('price'),
-            'image' => $request->hasFile('image') ? $request->file('image')->getClientOriginalName() : null,
-        ]);
-
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'price' => 'required|numeric|decimal:0,2|min:1',
-                'image' => 'nullable|image|mimes:jpg,jpeg,png|max:2048', 
-            ]);
-    
-            $productList = ProductList::findOrFail($id);
-    
-            if ($request->hasFile('image')) {
-                if ($productList->imagePath && file_exists(public_path($productList->imagePath))) {
-                    unlink(public_path($productList->imagePath));
-                }
-    
-                $image = $request->file('image');
-                $imageName = time() . '_' . $image->getClientOriginalName();
-                $imagePath = 'images/' . $imageName;
-                $image->move(public_path('images'), $imageName);
-    
-                $productList->imagePath = $imagePath;
-            }
-    
-            $productList->name = $validated['name'];
-            $productList->price = $validated['price'];
-            $productList->save();
-    
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Main dish updated successfully',
-                'product' => $productList
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error updating main dish: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
-    
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error updating main dish',
-                'error' => $e->getMessage()
-            ], 500);
         }
     }
       
