@@ -238,7 +238,7 @@ class ProductListController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Beverage dish added',
+                'message' => 'Beverage added',
                 'product' => $newproductList
             ]);
         } catch (\Exception $e) {
