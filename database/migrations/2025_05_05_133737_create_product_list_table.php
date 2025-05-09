@@ -18,7 +18,6 @@ return new class extends Migration
             $table->decimal('price', 10, 2);
             $table->enum('category', ['mainDish', 'beverages', 'desserts', 'others'])->default('others');
             $table->boolean('isActive')->default(true);
-            $table->foreignId('product_id')->constrained()->onDelete('restrict');
             $table->timestamps();
         });
     }

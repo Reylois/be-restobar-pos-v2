@@ -14,6 +14,10 @@ class ProductList extends Model
         'imagePath',
         'price',
         'category',
-        'isActive'
+        'isActive',
     ];
+
+    public function product() {
+        return $this->belongsTo(Product::class);
+    }
 }
