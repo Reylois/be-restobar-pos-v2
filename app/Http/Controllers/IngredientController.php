@@ -3,13 +3,24 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Ingredient;
+use App\Models\Ingredient; 
 
 class IngredientController extends Controller
 {
     public function index()
     {
-        return Ingredient::all();
+        try {
+            $ingredients = Ingredient::where('isActive', 1)->get();
+
+            return response()->json($ingredients);
+        } catch (\Exception $e) {
+            \Log::error($e);
+            return response()->json([
+                'error' => $e,
+                'status' => 'error',
+                'message' => 'Error fetching ingredients'
+            ]);
+        }
     }
 
     public function store(Request $request)
@@ -21,14 +32,12 @@ class IngredientController extends Controller
             'isActive' => 'boolean',
         ]);
 
-        $ingredient = Ingredient::create($validated);
+        Ingredient::create($validated);
 
-        return response()->json($ingredient, 201);
-    }
-
-    public function show(Ingredient $ingredient)
-    {
-        return $ingredient;
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Ingredient added successfully',
+        ]);
     }
 
     public function update(Request $request, Ingredient $ingredient)
