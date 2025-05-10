@@ -42,16 +42,27 @@ class IngredientController extends Controller
 
     public function update(Request $request, Ingredient $ingredient)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:ingredients,name,' . $ingredient->id,
-            'stock' => 'required|numeric|min:0',
-            'low_stock_threshold' => 'nullable|numeric|min:0',
-            'isActive' => 'boolean',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|unique:ingredients,name,' . $ingredient->id,
+                'stock' => 'required|numeric|min:0',
+                'low_stock_threshold' => 'nullable|numeric|min:0',
+                'isActive' => 'boolean',
+            ]);
 
-        $ingredient->update($validated);
+            $ingredient->update($validated);
 
-        return response()->json($ingredient);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ingredient updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating ingredient: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating ingredient'
+            ]);
+        }
     }
 
     public function destroy(Ingredient $ingredient)
