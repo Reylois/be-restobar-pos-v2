@@ -18,6 +18,9 @@ Route::middleware(['auth:sanctum', 'ability:admin'])->group(function () {
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', [AuthController::class, 'user']);
+    Route::get('/ingredient/fetch', [IngredientController::class, 'index']);
+    Route::get('/product/fetch', [ProductController::class, 'index']);
+
     
     // Staff routes
     Route::middleware('ability:staff')->group(function () {
@@ -27,9 +30,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // Admin routes
     Route::middleware('ability:admin')->group(function () {
 
-        // Ingredients Route
+        // Ingredients Routes
         Route::post('/ingredient/add', [IngredientController::class, 'store']);
-        Route::get('/ingredient/fetch', [IngredientController::class, 'index']);
         Route::put('/ingredient/update/{ingredient}', [IngredientController::class, 'update']);
+        Route::patch('/ingredient/disable/{ingredient}', [IngredientController::class, 'disable']);
+
+        // Products Routes
+        Route::post('/product/add', [ProductController::class, 'store']);
+        Route::put('/product/update/{product}', [ProductController::class, 'update']);
+        Route::patch('/product/disable/{product}', [ProductController::class, 'disable']);
     });
 });

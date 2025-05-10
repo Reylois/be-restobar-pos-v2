@@ -89,9 +89,21 @@ class IngredientController extends Controller
         }
     }
 
-    public function destroy(Ingredient $ingredient)
-    {
-        $ingredient->delete();
-        return response()->json(['message' => 'Ingredient deleted']);
+    public function disable(Ingredient $ingredient) {
+        try {   
+            $ingredient->update(['isActive' => false]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ingredient deleted sucessfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error disabling ingredient: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting ingredient',
+                'error' => $e
+            ], 500);
+        }
     }
 }

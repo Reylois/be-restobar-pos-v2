@@ -7,76 +7,143 @@ use App\Models\Product;
 
 class ProductController extends Controller
 {
-     public function index()
+    public function index(Request $request)
     {
-        return Product::with('ingredients')->get();
+        try {
+            $query = Product::query();
+
+            if ($request->has('category')) {
+                $query->where('category', $request->category)
+                    ->where('isActive', 1);
+            }
+
+            $products = $query->with('ingredients')->get();
+
+            return response()->json($products);
+        } catch (\Exception $e) {
+            \Log::error('Error fetching ' . $request->category . 's');
+            return response()->json([
+                ''
+            ]);
+        }
     }
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:dishes,name',
-            'price' => 'required|numeric',
-            'category' => 'nullable|string',
-            'imagePath' => 'nullable|string',
-            'track_stock' => 'boolean',
-            'stock' => 'nullable|numeric',
-            'available' => 'boolean',
-            'isActive' => 'boolean',
-            'ingredients' => 'array',
-            'ingredients.*.id' => 'required|exists:ingredients,id',
-            'ingredients.*.quantity' => 'required|numeric|min:0',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|',
+                'price' => 'nullable|numeric',
+                'category' => 'nullable|string',
+                'imagePath' => 'nullable|string',
+                'track_stock' => 'boolean',
+                'stock' => 'nullable|numeric',
+                'available' => 'boolean',
+                'isActive' => 'boolean',
+                'ingredients' => 'array',
+                'ingredients.*.id' => 'required|exists:ingredients,id',
+                'ingredients.*.quantity' => 'required|numeric|min:0',
+            ]);
 
-        $product = Product::create($validated);
+            $product = Product::where('name', $validated['name'])->first();
 
-        // Attach ingredients with quantities if provided
-        if (!empty($validated['ingredients'])) {
-            $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
-                return [$item['id'] => ['quantity' => $item['quantity']]];
-            });
-            $product->ingredients()->sync($syncData);
+            if ($product && !$product->isActive) {
+                // Re-enable and update the existing product
+                $product->update([
+                    'stock' => $validated['stock'],
+                    'isActive' => true
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => ucfirst($validated['category']) . ' added successfully'
+                ]);
+            }
+
+            if ($product && $product->isActive) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => ucfirst($request->input('category')) . ' with the same name already exists'
+                ], 409);
+            }
+
+            $product = Product::create($validated);
+
+            // Attach ingredients with quantities if provided
+            if (!empty($validated['ingredients'])) {
+                $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
+                    return [$item['id'] => ['quantity' => $item['quantity']]];
+                });
+                $product->ingredients()->sync($syncData);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => ucfirst($request->input('category')) . ' added successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error adding product: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error adding ' . $request->input('category')
+            ]);
         }
-
-        return response()->json($product->load('ingredients'), 201);
     }
-
-    public function show(Product $product)
-    {
-        return $product->load('ingredients');
-    }
-
+    
     public function update(Request $request, Product $product)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|unique:Productes,name,' . $product->id,
-            'price' => 'required|numeric',
-            'category' => 'nullable|string',
-            'imagePath' => 'nullable|string',
-            'track_stock' => 'boolean',
-            'stock' => 'nullable|numeric',
-            'available' => 'boolean',
-            'isActive' => 'boolean',
-            'ingredients' => 'array',
-            'ingredients.*.id' => 'required|exists:ingredients,id',
-            'ingredients.*.quantity' => 'required|numeric|min:0',
-        ]);
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|unique:products,name,' . $product->id,
+                'price' => 'nullable|numeric',
+                'category' => 'required|string',
+                'imagePath' => 'nullable|string',
+                'track_stock' => 'boolean',
+                'stock' => 'nullable|numeric',
+                'available' => 'boolean',
+                'isActive' => 'boolean',
+                'ingredients' => 'array',
+                'ingredients.*.id' => 'required|exists:ingredients,id',
+                'ingredients.*.quantity' => 'required|numeric|min:0',
+            ]);
 
-        $product->update($validated);
+            $product->update($validated);
 
-        if (!empty($validated['ingredients'])) {
-            $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
-                return [$item['id'] => ['quantity' => $item['quantity']]];
-            });
-            $product->ingredients()->sync($syncData);
+            if (!empty($validated['ingredients'])) {
+                $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
+                    return [$item['id'] => ['quantity' => $item['quantity']]];
+                });
+                $product->ingredients()->sync($syncData);
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => ucfirst($validated['category']) . ' updated successfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error updating product: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error updating ' . $request->input('category')
+            ]);
         }
-
-        return response()->json($product->load('ingredients'));
     }
 
-    public function destroy(Product $product)
-    {
-        $product->delete();
-        return response()->json(['message' => 'Product deleted']);
+    public function disable(Product $product, Request $request) {
+        try {   
+            $product->update(['isActive' => false]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => ucfirst($request->input('category')) . ' deleted sucessfully'
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Error disabling product: ' . $e->getMessage());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Error deleting ' . $request->input('category'),
+                'error' => $e
+            ], 500);
+        }
     }
 }
