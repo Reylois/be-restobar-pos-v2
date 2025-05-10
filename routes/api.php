@@ -3,6 +3,8 @@
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManagementController;
+use App\Http\Controllers\DishController;
+use App\Http\Controllers\IngredientController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -24,7 +26,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Admin routes
     Route::middleware('ability:admin')->group(function () {
-        
-        
+        Route::post('/ingredient/add', [IngredientController::class, 'store']);
+        Route::post('/ingredient/fetch', [IngredientController::class, 'index']);
     });
 });
