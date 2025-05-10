@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('price', 8, 2)->nullable();
             $table->string('category')->default('main_dish');
             $table->string('imagePath')->nullable();
-            $table->boolean('track_stock')->default(false);
+            $table->boolean('track_stock')->default(true);
             $table->float('stock')->default(0); // Only used if track_stock = true
             $table->boolean('available')->default(true);
             $table->boolean('isActive')->default(true);
