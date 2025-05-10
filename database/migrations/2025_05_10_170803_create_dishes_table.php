@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('dishes', function (Blueprint $table) {
+            $table->id();
+            $table->string('name')->unique();
+            $table->decimal('price', 8, 2);
+            $table->string('category')->default('main_dish');
+            $table->string('imagePath')->nullable();
+            $table->boolean('track_stock')->default(false);
+            $table->float('stock')->default(0); // Only used if track_stock = true
+            $table->boolean('available')->default(true);
+            $table->boolean('isActive')->default(true);
+            $table->timestamps();
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('dishes');
+    }
+};
