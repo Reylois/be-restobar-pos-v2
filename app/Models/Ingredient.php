@@ -16,9 +16,9 @@ class Ingredient extends Model
         'isActive',
     ];
 
-    public function dishes()
+    public function product()
     {
-        return $this->belongsToMany(Dish::class, 'dish_ingredients')
+        return $this->belongsToMany(Product::class, 'dish_ingredients')
                     ->withPivot('quantity')
                     ->withTimestamps();
     }

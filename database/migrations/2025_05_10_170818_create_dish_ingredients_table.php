@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('dish_ingredients', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('dish_id')->constrained('dishes')->onDelete('restrict');
+            $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
             $table->foreignId('ingredient_id')->constrained('ingredients')->onDelete('restrict');
             $table->float('quantity');
             $table->timestamps();

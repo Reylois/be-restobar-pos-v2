@@ -12,14 +12,14 @@ class DishIngredient extends Model
     protected $table = 'dish_ingredients';
     
     protected $fillable = [
-        'dish_id',
+        'product_id',
         'ingredient_id',
         'quantity',
     ];
 
-    public function dish()
+    public function products()
     {
-        return $this->belongsTo(Dish::class);
+        return $this->belongsTo(Product::class);
     }
 
     public function ingredient()

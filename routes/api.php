@@ -3,7 +3,7 @@
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManagementController;
-use App\Http\Controllers\DishController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\IngredientController;
 
 // Public routes

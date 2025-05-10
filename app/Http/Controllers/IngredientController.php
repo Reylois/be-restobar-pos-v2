@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use GrahamCampbell\ResultType\Success;
 use Illuminate\Http\Request;
 use App\Models\Ingredient; 
 
@@ -31,6 +32,29 @@ class IngredientController extends Controller
             'low_stock_threshold' => 'nullable|numeric|min:0',
             'isActive' => 'boolean',
         ]);
+
+        $ingredient = Ingredient::where('name', $validated['name'])->first();
+
+        if ($ingredient && !$ingredient->isActive) {
+            // Re-enable and update the existing product
+            $ingredient->update([
+                'stock' => $validated['stock'],
+                'low_stock_threshold' => $validated['low_stock_threshold'],
+                'isActive' => true
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Ingredient added successfully'
+            ]);
+        }
+
+        if ($ingredient && $ingredient->isActive) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Ingredient with the same name already exists'
+            ], 409);
+        }
 
         Ingredient::create($validated);
 

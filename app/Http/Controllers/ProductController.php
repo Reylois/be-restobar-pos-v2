@@ -3,13 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\Dish;
+use App\Models\Product;
 
-class DishController extends Controller
+class ProductController extends Controller
 {
      public function index()
     {
-        return Dish::with('ingredients')->get();
+        return Product::with('ingredients')->get();
     }
 
     public function store(Request $request)
@@ -28,28 +28,28 @@ class DishController extends Controller
             'ingredients.*.quantity' => 'required|numeric|min:0',
         ]);
 
-        $dish = Dish::create($validated);
+        $product = Product::create($validated);
 
         // Attach ingredients with quantities if provided
         if (!empty($validated['ingredients'])) {
             $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
                 return [$item['id'] => ['quantity' => $item['quantity']]];
             });
-            $dish->ingredients()->sync($syncData);
+            $product->ingredients()->sync($syncData);
         }
 
-        return response()->json($dish->load('ingredients'), 201);
+        return response()->json($product->load('ingredients'), 201);
     }
 
-    public function show(Dish $dish)
+    public function show(Product $product)
     {
-        return $dish->load('ingredients');
+        return $product->load('ingredients');
     }
 
-    public function update(Request $request, Dish $dish)
+    public function update(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'name' => 'required|string|unique:dishes,name,' . $dish->id,
+            'name' => 'required|string|unique:Productes,name,' . $product->id,
             'price' => 'required|numeric',
             'category' => 'nullable|string',
             'imagePath' => 'nullable|string',
@@ -62,21 +62,21 @@ class DishController extends Controller
             'ingredients.*.quantity' => 'required|numeric|min:0',
         ]);
 
-        $dish->update($validated);
+        $product->update($validated);
 
         if (!empty($validated['ingredients'])) {
             $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
                 return [$item['id'] => ['quantity' => $item['quantity']]];
             });
-            $dish->ingredients()->sync($syncData);
+            $product->ingredients()->sync($syncData);
         }
 
-        return response()->json($dish->load('ingredients'));
+        return response()->json($product->load('ingredients'));
     }
 
-    public function destroy(Dish $dish)
+    public function destroy(Product $product)
     {
-        $dish->delete();
-        return response()->json(['message' => 'Dish deleted']);
+        $product->delete();
+        return response()->json(['message' => 'Product deleted']);
     }
 }
