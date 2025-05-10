@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Product;
+use Illuminate\Support\Facades\Storage;
+
 
 class ProductController extends Controller
 {
@@ -13,18 +15,30 @@ class ProductController extends Controller
             $query = Product::query();
 
             if ($request->has('category')) {
-                $query->where('category', $request->category)
-                    ->where('isActive', 1);
+                $query->where('category', $request->category);
             }
 
-            $products = $query->with('ingredients')->get();
+            $products = $query->active()->get(); // uses scopeActive
 
-            return response()->json($products);
+            return response()->json($products->map(function ($product) {
+                return [
+                    'id' => $product->id,
+                    'name' => $product->name,
+                    'price' => $product->price,
+                    'stock' => $product->stock,
+                    'imagePath' => $product->imagePath,
+                    'track_stock' => $product->track_stock,
+                    'available_quantity' => $product->available_quantity,
+                    'available' => $product->available_quantity > 0,
+                    'ingredients' => $product->ingredients,
+                ];
+            }));
         } catch (\Exception $e) {
-            \Log::error('Error fetching ' . $request->category . 's');
+            \Log::error('Error fetching ' . $request->category . 's: ' . $e->getMessage());
             return response()->json([
-                ''
-            ]);
+                'status' => 'error',
+                'message' => 'Failed to fetch products'
+            ], 500);
         }
     }
 
@@ -32,45 +46,80 @@ class ProductController extends Controller
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|',
-                'price' => 'nullable|numeric',
-                'category' => 'nullable|string',
-                'imagePath' => 'nullable|string',
-                'track_stock' => 'boolean',
-                'stock' => 'nullable|numeric',
-                'available' => 'boolean',
-                'isActive' => 'boolean',
-                'ingredients' => 'array',
+                'name' => 'required|string|max:255',
+                'category' => 'required|string|in:main_dish,beverage,dessert,item',
+                'stock' => 'nullable|numeric|min:0',
+                'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+                'ingredients' => 'sometimes|array',
                 'ingredients.*.id' => 'required|exists:ingredients,id',
                 'ingredients.*.quantity' => 'required|numeric|min:0',
             ]);
 
+            $hasIngredients = !empty($validated['ingredients']);
+            $trackStock = !$hasIngredients;
+
             $product = Product::where('name', $validated['name'])->first();
 
+            // If reactivating an existing product
             if ($product && !$product->isActive) {
-                // Re-enable and update the existing product
-                $product->update([
-                    'stock' => $validated['stock'],
-                    'isActive' => true
-                ]);
+                $updateData = [
+                    'category' => $validated['category'],
+                    'track_stock' => $trackStock,
+                    'isActive' => true,
+                ];
+
+                if ($trackStock && isset($validated['stock'])) {
+                    $updateData['stock'] = $validated['stock'];
+                }
+
+                if ($request->hasFile('image')) {
+                    if ($product->imagePath) {
+                        Storage::delete($product->imagePath);
+                    }
+                    $updateData['imagePath'] = $request->file('image')->store('products', 'public');
+                }
+
+                $product->update($updateData);
+
+                if ($hasIngredients) {
+                    $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
+                        return [$item['id'] => ['quantity' => $item['quantity']]];
+                    });
+                    $product->ingredients()->sync($syncData);
+                }
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => ucfirst($validated['category']) . ' added successfully'
+                    'message' => ucfirst($validated['category']) . ' reactivated successfully'
                 ]);
             }
 
             if ($product && $product->isActive) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => ucfirst($request->input('category')) . ' with the same name already exists'
+                    'message' => ucfirst($validated['category']) . ' with the same name already exists'
                 ], 409);
             }
 
-            $product = Product::create($validated);
+            // New product creation
+            $data = [
+                'name' => $validated['name'],
+                'category' => $validated['category'],
+                'track_stock' => $trackStock,
+                'isActive' => true,
+            ];
 
-            // Attach ingredients with quantities if provided
-            if (!empty($validated['ingredients'])) {
+            if ($trackStock && isset($validated['stock'])) {
+                $data['stock'] = $validated['stock'];
+            }
+
+            if ($request->hasFile('image')) {
+                $data['imagePath'] = $request->file('image')->store('products');
+            }
+
+            $product = Product::create($data);
+
+            if ($hasIngredients) {
                 $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
                     return [$item['id'] => ['quantity' => $item['quantity']]];
                 });
@@ -79,16 +128,19 @@ class ProductController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => ucfirst($request->input('category')) . ' added successfully'
+                'message' => ucfirst($validated['category']) . ' added successfully',
+                'data' => $product
             ]);
         } catch (\Exception $e) {
             \Log::error('Error adding product: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error adding ' . $request->input('category')
-            ]);
+                'message' => 'Error adding ' . $request->input('category'),
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
     
     public function update(Request $request, Product $product)
     {
@@ -98,7 +150,6 @@ class ProductController extends Controller
                 'price' => 'nullable|numeric',
                 'category' => 'required|string',
                 'imagePath' => 'nullable|string',
-                'track_stock' => 'boolean',
                 'stock' => 'nullable|numeric',
                 'available' => 'boolean',
                 'isActive' => 'boolean',
@@ -107,9 +158,23 @@ class ProductController extends Controller
                 'ingredients.*.quantity' => 'required|numeric|min:0',
             ]);
 
-            $product->update($validated);
+            $hasIngredients = !empty($validated['ingredients']);
+            $trackStock = !$hasIngredients;
 
-            if (!empty($validated['ingredients'])) {
+            $updateData = [
+                'name' => $validated['name'],
+                'price' => $validated['price'] ?? $product->price,
+                'category' => $validated['category'],
+                'imagePath' => $validated['imagePath'] ?? $product->imagePath,
+                'stock' => $validated['stock'] ?? $product->stock,
+                'available' => $validated['available'] ?? $product->available,
+                'isActive' => $validated['isActive'] ?? $product->isActive,
+                'track_stock' => $trackStock
+            ];
+
+            $product->update($updateData);
+
+            if ($hasIngredients) {
                 $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
                     return [$item['id'] => ['quantity' => $item['quantity']]];
                 });
@@ -124,10 +189,12 @@ class ProductController extends Controller
             \Log::error('Error updating product: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error updating ' . $request->input('category')
-            ]);
+                'message' => 'Error updating ' . $request->input('category'),
+                'error' => $e->getMessage()
+            ], 500);
         }
     }
+
 
     public function disable(Product $product, Request $request) {
         try {   
