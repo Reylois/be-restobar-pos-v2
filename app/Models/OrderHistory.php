@@ -25,9 +25,4 @@ class OrderHistory extends Model
     {
         return $this->belongsTo(Sale::class);
     }
-
-    public function productList() 
-    {
-        return $this->belongsTo(ProductList::class);
-    }
 }
