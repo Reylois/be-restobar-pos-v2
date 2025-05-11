@@ -11,12 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('product_lists', function (Blueprint $table) {
+        Schema::create('products', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
+            $table->decimal('price', 8, 2)->default(0);
+            $table->string('category')->default('main_dish');
             $table->string('imagePath')->nullable();
-            $table->decimal('price', 10, 2);
-            $table->enum('category', ['mainDish', 'beverages', 'desserts', 'others'])->default('others');
+            $table->boolean('track_stock')->default(true);
+            $table->float('stock')->default(0); // Only used if track_stock = true
+            $table->boolean('available')->default(true);
             $table->boolean('isActive')->default(true);
             $table->timestamps();
         });
@@ -27,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('product_lists');
+        Schema::dropIfExists('products');
     }
 };

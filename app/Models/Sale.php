@@ -9,14 +9,20 @@ class Sale extends Model
 {
     use HasFactory;
 
+    public $timestamps = false; // since you're using only `created_at`
+
     protected $fillable = [
-        'order_type',
+        'subtotal', 
+        'discount', 
+        'total_amount',
+        'order_type', 
+        'payment_method', 
+        'amount_paid', 
         'created_at'
     ];
 
-    public $timestamps = false;
-
-    public function orderHistory() {
-        return $this->hasMany(OrderHistory::class);
+    public function saleItems()
+    {
+        return $this->hasMany(SaleItem::class);
     }
 }

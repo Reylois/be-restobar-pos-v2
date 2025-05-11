@@ -13,12 +13,17 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
+            $table->decimal('subtotal', 8, 2)->default(0);
+            $table->decimal('discount',8,2)->default(0);
+            $table->decimal('total_amount',8,2)->default(0);
             $table->enum('order_type', ['dine-in', 'take-out'])->default('dine-in');
+            $table->enum('payment_method', ['cash', 'gcash'])->default('cash');
+            $table->decimal('amount_paid')->default(0);
             $table->timestamp('created_at');
         });
     }
 
-    /**     
+    /**
      * Reverse the migrations.
      */
     public function down(): void

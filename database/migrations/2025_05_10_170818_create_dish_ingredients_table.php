@@ -11,14 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('products', function (Blueprint $table) {
+        Schema::create('dish_ingredients', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
-            $table->integer('stock');
-            $table->enum('category', ['ingredients', 'beverages', 'desserts', 'others'])->default('others');
-            $table->boolean('isActive')->default(true);
+            $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
+            $table->foreignId('ingredient_id')->constrained('ingredients')->onDelete('restrict');
+            $table->float('quantity');
             $table->timestamps();
-        }); 
+        });
     }
 
     /**
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('products');
+        Schema::dropIfExists('dish_ingredients');
     }
 };
