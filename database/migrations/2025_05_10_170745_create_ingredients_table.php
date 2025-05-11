@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('ingredients', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->float('stock')->default(0);
-            $table->float('low_stock_threshold')->default(0);
+            $table->integer('stock')->default(0);
+            $table->integer('low_stock_threshold')->default(0);
             $table->boolean('isActive')->default(true);
             $table->timestamps();
         });

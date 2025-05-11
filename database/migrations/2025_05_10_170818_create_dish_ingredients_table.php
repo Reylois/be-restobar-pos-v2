@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('product_id')->constrained('products')->onDelete('restrict');
             $table->foreignId('ingredient_id')->constrained('ingredients')->onDelete('restrict');
-            $table->float('quantity');
+            $table->integer('quantity');
             $table->timestamps();
         });
     }
