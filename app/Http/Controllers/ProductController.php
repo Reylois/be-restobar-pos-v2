@@ -26,6 +26,7 @@ class ProductController extends Controller
                     'name' => $product->name,
                     'price' => $product->price,
                     'stock' => $product->stock,
+                    'category' => $product->category,
                     'imagePath' => $product->imagePath,
                     'track_stock' => $product->track_stock,
                     'available_quantity' => $product->available_quantity,
@@ -49,6 +50,7 @@ class ProductController extends Controller
                 'name' => 'required|string|max:255',
                 'category' => 'required|string|in:main_dish,beverage,dessert,item',
                 'stock' => 'nullable|numeric|min:0',
+                'price' => 'nullable|numeric|min:0',
                 'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
                 'ingredients' => 'sometimes|array',
                 'ingredients.*.id' => 'required|exists:ingredients,id',
@@ -66,6 +68,7 @@ class ProductController extends Controller
                     'category' => $validated['category'],
                     'track_stock' => $trackStock,
                     'isActive' => true,
+                    'price' => $validated['price'] ?? 0,
                 ];
 
                 if ($trackStock && isset($validated['stock'])) {
@@ -90,14 +93,14 @@ class ProductController extends Controller
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => ucfirst($validated['category']) . ' reactivated successfully'
+                    'message' => str_replace('_', ' ',ucfirst($validated['category'])) . ' added successfully'
                 ]);
             }
 
             if ($product && $product->isActive) {
                 return response()->json([
                     'status' => 'error',
-                    'message' => ucfirst($validated['category']) . ' with the same name already exists'
+                    'message' =>str_replace('_', ' ',ucfirst($validated['category'])) . ' with the same name already exists'
                 ], 409);
             }
 
@@ -106,6 +109,7 @@ class ProductController extends Controller
                 'name' => $validated['name'],
                 'category' => $validated['category'],
                 'track_stock' => $trackStock,
+                'price' => $validated['price'] ?? 0,
                 'isActive' => true,
             ];
 
@@ -114,7 +118,7 @@ class ProductController extends Controller
             }
 
             if ($request->hasFile('image')) {
-                $data['imagePath'] = $request->file('image')->store('products');
+                $data['imagePath'] = $request->file('image')->store('products', 'public');
             }
 
             $product = Product::create($data);
@@ -128,72 +132,81 @@ class ProductController extends Controller
 
             return response()->json([
                 'status' => 'success',
-                'message' => ucfirst($validated['category']) . ' added successfully',
+                'message' => str_replace('_', ' ',ucfirst($validated['category'])) . ' added successfully',
                 'data' => $product
             ]);
         } catch (\Exception $e) {
             \Log::error('Error adding product: ' . $e->getMessage());
             return response()->json([
                 'status' => 'error',
-                'message' => 'Error adding ' . $request->input('category'),
+                'message' => $e->getMessage(),
                 'error' => $e->getMessage()
             ], 500);
         }
     }
 
     
-    public function update(Request $request, Product $product)
-    {
-        try {
-            $validated = $request->validate([
-                'name' => 'required|string|unique:products,name,' . $product->id,
-                'price' => 'nullable|numeric',
-                'category' => 'required|string',
-                'imagePath' => 'nullable|string',
-                'stock' => 'nullable|numeric',
-                'available' => 'boolean',
-                'isActive' => 'boolean',
-                'ingredients' => 'array',
-                'ingredients.*.id' => 'required|exists:ingredients,id',
-                'ingredients.*.quantity' => 'required|numeric|min:0',
-            ]);
+public function update(Request $request, Product $product)
+{
+    try {
+        $validated = $request->validate([
+            'name' => 'required|string|unique:products,name,' . $product->id,
+            'price' => 'nullable|numeric',
+            'category' => 'required|string',
+            'imagePath' => 'nullable|string',
+            'stock' => 'nullable|numeric',
+            'available' => 'boolean',
+            'isActive' => 'boolean',
+            'ingredients' => 'array',
+            'ingredients.*.id' => 'required|exists:ingredients,id',
+            'ingredients.*.quantity' => 'required|numeric|min:0',
+        ]);
 
-            $hasIngredients = !empty($validated['ingredients']);
-            $trackStock = !$hasIngredients;
+        $hasIngredients = !empty($validated['ingredients']);
+        $trackStock = !$hasIngredients;
 
-            $updateData = [
-                'name' => $validated['name'],
-                'price' => $validated['price'] ?? $product->price,
-                'category' => $validated['category'],
-                'imagePath' => $validated['imagePath'] ?? $product->imagePath,
-                'stock' => $validated['stock'] ?? $product->stock,
-                'available' => $validated['available'] ?? $product->available,
-                'isActive' => $validated['isActive'] ?? $product->isActive,
-                'track_stock' => $trackStock
-            ];
+        $updateData = [
+            'name' => $validated['name'],
+            'price' => $validated['price'] ?? $product->price,
+            'category' => $validated['category'],
+            'imagePath' => $validated['imagePath'] ?? $product->imagePath,
+            'stock' => $validated['stock'] ?? $product->stock,
+            'available' => $validated['available'] ?? $product->available,
+            'isActive' => $validated['isActive'] ?? $product->isActive,
+            'track_stock' => $trackStock
+        ];
 
-            $product->update($updateData);
-
-            if ($hasIngredients) {
-                $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
-                    return [$item['id'] => ['quantity' => $item['quantity']]];
-                });
-                $product->ingredients()->sync($syncData);
+        // Handle image upload if file is present
+        if ($request->hasFile('image')) {
+            if ($product->imagePath) {
+                \Storage::disk('public')->delete($product->imagePath);
             }
-
-            return response()->json([
-                'status' => 'success',
-                'message' => ucfirst($validated['category']) . ' updated successfully'
-            ]);
-        } catch (\Exception $e) {
-            \Log::error('Error updating product: ' . $e->getMessage());
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error updating ' . $request->input('category'),
-                'error' => $e->getMessage()
-            ], 500);
+            $path = $request->file('image')->store('products', 'public');
+            $updateData['imagePath'] = $path;
         }
+
+        $product->update($updateData);
+
+        if ($hasIngredients) {
+            $syncData = collect($validated['ingredients'])->mapWithKeys(function ($item) {
+                return [$item['id'] => ['quantity' => $item['quantity']]];
+            });
+            $product->ingredients()->sync($syncData);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => ucfirst($validated['category']) . ' updated successfully'
+        ]);
+    } catch (\Exception $e) {
+        \Log::error('Error updating product: ' . $e->getMessage());
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Error updating ' . $request->input('category'),
+            'error' => $e->getMessage()
+        ], 500);
     }
+}
 
 
     public function disable(Product $product, Request $request) {
