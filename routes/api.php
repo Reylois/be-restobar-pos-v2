@@ -6,6 +6,7 @@ use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\ExpensesController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -40,5 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/product/add', [ProductController::class, 'store']);
         Route::put('/product/update/{product}', [ProductController::class, 'update']);
         Route::patch('/product/disable/{product}', [ProductController::class, 'disable']);
+
+        // Expenses Route
+        Route::post('/expenses/create', [ExpensesController::class, 'store']);
+        Route::get('/expenses/fetch', [ExpensesController::class, 'index']);
     });
 });
