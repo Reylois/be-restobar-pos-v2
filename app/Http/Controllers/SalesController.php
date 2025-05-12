@@ -161,6 +161,12 @@ class SalesController extends Controller
             'total_count' => $sales->total()
         ];
 
+        // Add change to each sale
+        $sales->getCollection()->transform(function ($sale) {
+            $sale->change = max(0, $sale->amount_paid - $sale->total_amount);
+            return $sale;
+        });
+
         return response()->json([
             'sales' => $sales,
             'summary' => $summary

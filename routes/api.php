@@ -22,8 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/ingredient/fetch', [IngredientController::class, 'index']);
     Route::get('/product/fetch', [ProductController::class, 'index']);
     Route::post('/order/create', [SalesController::class, 'createSale']);
-
-
+    Route::get('/sales/fetch', [SalesController::class, 'getSalesReport']);
     
     // Staff routes
     Route::middleware('ability:staff')->group(function () {
