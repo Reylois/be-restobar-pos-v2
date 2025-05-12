@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\IngredientController;
+use App\Http\Controllers\SalesController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -20,11 +21,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::get('/ingredient/fetch', [IngredientController::class, 'index']);
     Route::get('/product/fetch', [ProductController::class, 'index']);
+    Route::post('/order/create', [SalesController::class, 'createSale']);
+
 
     
     // Staff routes
     Route::middleware('ability:staff')->group(function () {
-        // Staff endpoints here
     });
     
     // Admin routes
