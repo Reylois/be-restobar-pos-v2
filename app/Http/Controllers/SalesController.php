@@ -20,7 +20,7 @@ class SalesController extends Controller
     public function createSale(Request $request)
     {
         try {
-             // Validate the incoming request
+            // Validate the incoming request
             $validator = Validator::make($request->all(), [
                 'order_items' => 'required|array',
                 'order_items.*.product_id' => 'required|exists:products,id',
@@ -35,6 +35,11 @@ class SalesController extends Controller
 
             // Check validation
             if ($validator->fails()) {
+                \Log::warning('Sale validation failed', [
+                    'errors' => $validator->errors()->toArray(),
+                    'request' => $request->all()
+                ]);
+
                 return response()->json([
                     'errors' => $validator->errors()
                 ], 400);
@@ -98,7 +103,12 @@ class SalesController extends Controller
                 ], 201);
             });
         } catch (\Exception $e) {
-            \Log::error('Error creating order: ' . $e->getMessage());
+            \Log::error('Error creating order', [
+                'message' => $e->getMessage(),
+                'request' => $request->all(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
@@ -152,7 +162,7 @@ class SalesController extends Controller
         // Get sales data
         $sales = $query->with('saleItems.product')
             ->orderBy('created_at', 'desc')
-            ->paginate(20);
+            ->paginate(10);
 
         // Calculate summary
         $summary = [
