@@ -101,7 +101,7 @@ class DashboardController extends Controller
             // Get expenses data grouped by the same time period
             $expensesData = DB::table('expenses')
                 ->select(DB::raw("DATE_FORMAT(created_at, '{$timePeriod['format']}') as period"))
-                ->selectRaw('SUM(amount) as expenses')
+                ->selectRaw('SUM(total_amount) as expenses')
                 ->where('created_at', '>=', $timePeriod['startDate'])
                 ->groupBy('period')
                 ->orderBy('period')

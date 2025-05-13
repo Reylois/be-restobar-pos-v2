@@ -49,5 +49,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Dashboard Routes
         Route::get('/summary/fetch', [DashboardController::class, 'getSummary']);
+        Route::get('/graph-data/fetch', [DashboardController::class, 'getGraphData']);
     });
 });
