@@ -47,17 +47,16 @@ class SalesController extends Controller
 
             // Start a database transaction
             return DB::transaction(function () use ($request) {
-                // Calculate subtotal and discount
+                // Calculate subtotal
                 $subtotal = collect($request->order_items)
                     ->sum(fn($item) => $item['quantity'] * $item['price']);
-                
+
                 $discountPercent = $request->input('discount_percent', 0);
-                $discount = $subtotal * ($discountPercent / 100);
 
                 // Create sale record
                 $sale = Sale::create([
                     'subtotal' => $subtotal,
-                    'discount' => $discount,
+                    'discount' => $discountPercent, // Store discount as percentage
                     'total_amount' => $request->input('total_amount'),
                     'order_type' => $request->input('order_type'),
                     'payment_method' => $request->input('payment_method'),
@@ -112,9 +111,10 @@ class SalesController extends Controller
             return response()->json([
                 'status' => 'error',
                 'message' => $e->getMessage()
-            ]); 
+            ]);
         }
     }
+
 
     /**
      * Get sales report
