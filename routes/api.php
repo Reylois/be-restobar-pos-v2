@@ -7,6 +7,7 @@ use App\Http\Controllers\ProductController;
 use App\Http\Controllers\IngredientController;
 use App\Http\Controllers\SalesController;
 use App\Http\Controllers\ExpensesController;
+use App\Http\Controllers\DashboardController;
 
 // Public routes
 Route::post('/login', [AuthController::class, 'login']);
@@ -45,5 +46,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Expenses Route
         Route::post('/expenses/create', [ExpensesController::class, 'store']);
         Route::get('/expenses/fetch', [ExpensesController::class, 'index']);
+
+        // Dashboard Routes
+        Route::get('/summary/fetch', [DashboardController::class, 'getSummary']);
     });
 });
