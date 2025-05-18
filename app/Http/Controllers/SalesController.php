@@ -115,7 +115,6 @@ class SalesController extends Controller
         }
     }
 
-
     /**
      * Get sales report
      * 
@@ -126,6 +125,8 @@ class SalesController extends Controller
     {
         // Validate input parameters
         $validator = Validator::make($request->all(), [
+            'page' => 'nullable|integer|min:1',
+            'per_page' => 'nullable|integer|min:1|max:100',
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'order_type' => 'nullable|in:dine-in,take-out',
@@ -142,13 +143,12 @@ class SalesController extends Controller
         // Build query
         $query = Sale::query();
 
-        // Apply filters
-        if ($request->has('start_date')) {
-            $query->whereDate('created_at', '>=', $request->input('start_date'));
-        }
-
-        if ($request->has('end_date')) {
-            $query->whereDate('created_at', '<=', $request->input('end_date'));
+        // Apply date filters
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $query->whereBetween('created_at', [
+                $request->input('start_date') . ' 00:00:00',
+                $request->input('end_date') . ' 23:59:59'
+            ]);
         }
 
         if ($request->has('order_type')) {
@@ -159,10 +159,14 @@ class SalesController extends Controller
             $query->where('payment_method', $request->input('payment_method'));
         }
 
+        // Get pagination parameters
+        $page = $request->input('page', 1);
+        $perPage = $request->input('per_page', 10);
+
         // Get sales data
         $sales = $query->with('saleItems.product')
             ->orderBy('created_at', 'desc')
-            ->paginate(10);
+            ->paginate($perPage, ['*'], 'page', $page);
 
         // Calculate summary
         $summary = [
