@@ -50,5 +50,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Dashboard Routes
         Route::get('/summary/fetch', [DashboardController::class, 'getSummary']);
         Route::get('/graph-data/fetch', [DashboardController::class, 'getGraphData']);
+
+        Route::get('/users', [UserManagementController::class, 'index']);
+        Route::post('/user/add', [UserManagementController::class, 'store']);
+        Route::put('/user/update/{id}', [UserManagementController::class, 'update']);
+        Route::put('/user/{user}/disable', [UserManagementController::class, 'disable']);
     });
 });

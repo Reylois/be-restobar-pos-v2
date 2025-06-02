@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('fname');
             $table->string('lname');
+            $table->string('mname')->nullable();
             $table->string('username')->unique();
             $table->string('password');
             $table->enum('role', ['admin', 'cashier'])->default('cashier');
+            $table->boolean('isActive')->default(true);
             $table->rememberToken();
             $table->timestamps();
         });

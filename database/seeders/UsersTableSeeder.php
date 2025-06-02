@@ -12,9 +12,10 @@ class UsersTableSeeder extends Seeder
     {
         // Create admin user
         User::create([
-            'fname' => 'Admin',
-            'lname' => 'User',
-            'username' => 'admin',
+            'fname' => 'Reylois',
+            'lname' => 'Baer',
+            'mname' => 'Guinita',
+            'username' => 'reylois',
             'password' => Hash::make('password'),
             'role' => 'admin',
         ]);
@@ -23,6 +24,7 @@ class UsersTableSeeder extends Seeder
         User::create([
             'fname' => 'Cashier',
             'lname' => 'User',
+            'mname' => 'cash',
             'username' => 'cashier',
             'password' => Hash::make('password'),
             'role' => 'cashier',
